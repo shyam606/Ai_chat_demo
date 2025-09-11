@@ -52,7 +52,7 @@ export default function ChatInput() {
         }),
       });
 
-      const data = await res.json();
+      const data: { reply?: string } = await res.json();
 
       dispatch(
         addMessage({
@@ -64,13 +64,15 @@ export default function ChatInput() {
         })
       );
     } catch (error) {
-      console.error("Chat error:", error);
+      const message =
+        error instanceof Error ? error.message : "❌ Error connecting to API";
+      console.error("Chat error:", message);
       dispatch(
         addMessage({
           chatId: chatId!,
           message: {
             sender: "bot",
-            text: "❌ Error connecting to API",
+            text: message,
           },
         })
       );
@@ -88,13 +90,7 @@ export default function ChatInput() {
         placeholder="Type a message..."
         className="flex-1 chat_input"
       />
-      <MdSend onClick={handleSend} size={30}/>
-      {/* <button
-        onClick={handleSend}
-        className="bg-blue-600 h-11 text-white px-4 py-2 rounded-2xl disabled:opacity-50"
-      >
-        Send
-      </button> */}
+      <MdSend onClick={handleSend} size={30} />
     </div>
   );
 }

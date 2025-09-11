@@ -3,13 +3,17 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
+interface Message {
+  role: "user" | "bot";
+  content: string;
+}
+
 export async function POST(req: Request) {
   try {
-    const { messages } = await req.json();
+    const { messages }: { messages: Message[] } = await req.json();
 
-    // Get the latest user message
     const lastUserMessage = messages
-      .filter((m: any) => m.role === "user")
+      .filter((m) => m.role === "user")
       .pop()?.content;
 
     if (!lastUserMessage) {
@@ -17,16 +21,14 @@ export async function POST(req: Request) {
     }
 
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
     const result = await model.generateContent(lastUserMessage);
     const reply = result.response.text();
 
     return NextResponse.json({ reply });
-  } catch (error: any) {
-    console.error("Gemini API Error:", error);
-    return NextResponse.json(
-      { error: error.message || "Something went wrong" },
-      { status: 500 }
-    );
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Something went wrong";
+    console.error("Gemini API Error:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
